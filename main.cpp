@@ -1,10 +1,6 @@
 #include <iostream>
+#include <memory>
 #include "SortedListInterface.h"
-
-int main() {
-
-	return 0;
-}
 
 template <typename ItemType>
 class Node{
@@ -13,6 +9,7 @@ private:
 	Node *nextNode;
 
 public:
+	Node(ItemType inputData, Node<ItemType> inputNextNode):data(inputData), nextNode(&inputNextNode){}
 	Node(ItemType inputData):data(inputData), nextNode(nullptr){}
 	Node():data(nullptr), nextNode(nullptr){};
 
@@ -39,15 +36,59 @@ template <typename ItemType>
 class SortedLinkedList :  public SortedListInterface<ItemType>{
 private:
 	Node<ItemType> * head;
+
+	/*
+	Node<ItemType> * getPreviousNode(ItemType inputData){
+		Node<ItemType> * currentNode = head;
+		Node<ItemType> * previousNode = head;
+
+		while(currentNode != nullptr && currentNode->getData() != inputData){
+			previousNode = currentNode;
+			currentNode = currentNode->getNextNode();
+		}
+
+		return previousNode;
+	}
+	 */
+
+	Node<ItemType> * getPreviousNode(Node<ItemType> &inputNode){
+		Node<ItemType> * currentNode = head;
+		Node<ItemType> * previousNode = head;
+
+		while(currentNode != nullptr && currentNode != &inputNode){
+			previousNode = currentNode;
+			currentNode = currentNode->getNextNode();
+		}
+
+		return previousNode;
+
+	}
+
 public:
-	virtual bool insertSorted(const ItemType& newEntry) = 0;
+	virtual bool insertSorted(const ItemType& newEntry){
+		if(head == nullptr){
+			head = new Node<ItemType>(newEntry);
 
-	virtual bool removeSorted(const ItemType& anEntry) = 0;
+			return true;
+		}
 
-	virtual int getPosition(const ItemType& anEntry) const = 0;
+		Node<ItemType> * traversalNode = head;
 
-	// The following methods are the same as those given in ListInterface
-	// in Listing 8-1 of Chapter 8 and are completely specified there.
+		while(traversalNode != nullptr && traversalNode->getData() < newEntry){
+			traversalNode = traversalNode->getNextNode();
+		}
+
+		Node<ItemType> * tempNode = new Node<ItemType>(newEntry, *traversalNode);
+		getPreviousNode(*traversalNode)->setNextNode(tempNode);
+
+		return true;
+	}
+
+	virtual bool removeSorted(const ItemType& anEntry) {}
+
+	virtual int getPosition(const ItemType& anEntry) const {
+		return -1;
+	}
 
 	virtual bool isEmpty() const{
 		return head == nullptr;
@@ -79,7 +120,7 @@ public:
 	};
 
 	/** Removes all entries from this list. */
-	virtual void clear() = 0;
+	virtual void clear(){}
 
 	virtual ItemType getEntry(int position) const{
 		Node<ItemType> * traversalNode = head;
@@ -94,3 +135,22 @@ public:
 	/** Destroys object and frees memory allocated by object. */
 	virtual ~SortedLinkedList() { }
 };
+
+
+int main() {
+	SortedListInterface<int> * myList = new SortedLinkedList<int>();
+	std::string inputString = "";
+
+	std::cout << "Please enter a few numbers, ints please" << std::endl;
+	for(int i = 0; i < 7; i++){
+		std::getline(std::cin, inputString);
+		myList->insertSorted(std::atoi(&inputString[0]));
+	}
+
+	for(int i = 0; i < 7; i++){
+		std::cout << myList->getEntry(i) << std::endl;
+	}
+
+	std::cin;
+	return 0;
+}

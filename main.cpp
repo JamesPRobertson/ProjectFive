@@ -74,12 +74,29 @@ public:
 
 		Node<ItemType> * traversalNode = head;
 
+        while(traversalNode->getNextNode() != nullptr && traversalNode->getData() > newEntry){
+            traversalNode = traversalNode->getNextNode();
+        }
+
+		if(traversalNode->getNextNode() == nullptr){
+		    traversalNode->setNextNode(new Node<ItemType>(newEntry));
+		}
+		else{
+            Node<ItemType> * tempNode = new Node<ItemType>(newEntry, *traversalNode);
+            getPreviousNode(*traversalNode)->setNextNode(tempNode);
+		}
+
+        while(traversalNode != nullptr){
+            traversalNode = traversalNode->getNextNode();
+        }
+		/*
 		while(traversalNode != nullptr && traversalNode->getData() < newEntry){
 			traversalNode = traversalNode->getNextNode();
 		}
+        */
 
-		Node<ItemType> * tempNode = new Node<ItemType>(newEntry, *traversalNode);
-		getPreviousNode(*traversalNode)->setNextNode(tempNode);
+		//getPreviousNode cannot work on a null pointer
+
 
 		return true;
 	}
@@ -117,6 +134,8 @@ public:
 
 		prevNode->setNextNode(curNode->getNextNode());
 		delete curNode;
+
+		return true;
 	};
 
 	/** Removes all entries from this list. */

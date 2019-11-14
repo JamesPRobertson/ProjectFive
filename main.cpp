@@ -1,16 +1,17 @@
 #include <iostream>
 #include <memory>
+#include <random>
 #include "SortedListInterface.h"
 
 template <typename ItemType>
 class Node{
 private:
 	ItemType data;
-	Node *nextNode;
+	Node<ItemType> * nextNode;
 
 public:
-	Node(ItemType inputData, Node<ItemType> inputNextNode):data(inputData), nextNode(&inputNextNode){}
-	Node(ItemType inputData):data(inputData), nextNode(nullptr){}
+	Node(ItemType inputData, Node<ItemType> *inputNextNode):data(inputData), nextNode(inputNextNode){};
+	Node(ItemType inputData):data(inputData), nextNode(nullptr){};
 	Node():data(nullptr), nextNode(nullptr){};
 
 	char getData() const {
@@ -65,6 +66,8 @@ private:
 	}
 
 public:
+	SortedLinkedList() : head(nullptr){};
+
 	virtual bool insertSorted(const ItemType& newEntry){
 		if(head == nullptr){
 			head = new Node<ItemType>(newEntry);
@@ -72,36 +75,59 @@ public:
 			return true;
 		}
 
+		if(newEntry < head->getData()){
+			Node<ItemType> * tempNode = new Node<ItemType>(newEntry, head);
+			head = tempNode;
+
+			return true;
+		}
+
 		Node<ItemType> * traversalNode = head;
 
-        while(traversalNode->getNextNode() != nullptr && traversalNode->getData() > newEntry){
-            traversalNode = traversalNode->getNextNode();
-        }
-
-		if(traversalNode->getNextNode() == nullptr){
-		    traversalNode->setNextNode(new Node<ItemType>(newEntry));
-		}
-		else{
-            Node<ItemType> * tempNode = new Node<ItemType>(newEntry, *traversalNode);
-            getPreviousNode(*traversalNode)->setNextNode(tempNode);
-		}
-
-        while(traversalNode != nullptr){
-            traversalNode = traversalNode->getNextNode();
-        }
-		/*
-		while(traversalNode != nullptr && traversalNode->getData() < newEntry){
+		while(traversalNode->getNextNode() != nullptr && traversalNode->getNextNode()->getData() < newEntry){
 			traversalNode = traversalNode->getNextNode();
 		}
-        */
 
-		//getPreviousNode cannot work on a null pointer
-
+		if(traversalNode->getNextNode() == nullptr){
+			traversalNode->setNextNode(new Node<ItemType>(newEntry));
+		}
+		else{
+			Node<ItemType> * tempNode = new Node<ItemType>(newEntry, traversalNode->getNextNode());
+			traversalNode->setNextNode(tempNode);
+		}
 
 		return true;
 	}
 
-	virtual bool removeSorted(const ItemType& anEntry) {}
+	virtual bool removeSorted(const ItemType& anEntry) {
+	    if(head->getData() == anEntry){
+	        Node<ItemType> * tempNode = head;
+	        head = head->getNextNode();
+
+	        delete(tempNode);
+	        tempNode = nullptr;
+	    }
+
+	    Node<ItemType> * traversalNode = head;
+
+	    while(traversalNode->getNextNode() != nullptr && traversalNode->getNextNode()->getData() != anEntry){
+	        traversalNode = traversalNode->getNextNode();
+	    }
+
+	    if(traversalNode->getNextNode() != nullptr){
+            Node<ItemType> * delNode = traversalNode->getNextNode();
+
+            traversalNode->setNextNode(delNode->getNextNode());
+
+            delete(delNode);
+            delNode = nullptr;
+
+            return true;
+	    }
+	    else{
+	        return false;
+	    }
+	}
 
 	virtual int getPosition(const ItemType& anEntry) const {
 		return -1;
@@ -139,7 +165,9 @@ public:
 	};
 
 	/** Removes all entries from this list. */
-	virtual void clear(){}
+	virtual void clear(){
+
+	}
 
 	virtual ItemType getEntry(int position) const{
 		Node<ItemType> * traversalNode = head;
@@ -152,24 +180,39 @@ public:
 	};
 
 	/** Destroys object and frees memory allocated by object. */
-	virtual ~SortedLinkedList() { }
+	virtual ~SortedLinkedList() {}
 };
 
 
 int main() {
 	SortedListInterface<int> * myList = new SortedLinkedList<int>();
-	std::string inputString = "";
 
-	std::cout << "Please enter a few numbers, ints please" << std::endl;
-	for(int i = 0; i < 7; i++){
-		std::getline(std::cin, inputString);
-		myList->insertSorted(std::atoi(&inputString[0]));
+	std::random_device rd;
+
+	std::default_random_engine generator;
+	std::uniform_int_distribution<int> dist(0,63);
+
+	int firstNum = -1;
+
+	for(int i = 0; i < 20; i-=-1){
+	    int randNum = dist(generator);
+	    myList->insertSorted(randNum);
+
+	    std::cout << "Slapped in a " << randNum << std::endl;
+
+	    if(i == 0){
+	        firstNum = randNum;
+	    }
+		//myList->insertSorted(dist(engine));
 	}
 
-	for(int i = 0; i < 7; i++){
+	myList->removeSorted(firstNum);
+
+	for(int i = 0; i < 19; i++){
 		std::cout << myList->getEntry(i) << std::endl;
 	}
 
-	std::cin;
+	std::cout << "Number removed was: " << firstNum;
+
 	return 0;
 }

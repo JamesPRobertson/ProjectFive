@@ -1,16 +1,17 @@
 #include <iostream>
 #include <memory>
+#include <random>
 #include "SortedListInterface.h"
 
 template <typename ItemType>
 class Node{
 private:
 	ItemType data;
-	Node *nextNode;
+	Node<ItemType> * nextNode;
 
 public:
-	Node(ItemType inputData, Node<ItemType> inputNextNode):data(inputData), nextNode(&inputNextNode){}
-	Node(ItemType inputData):data(inputData), nextNode(nullptr){}
+	Node(ItemType inputData, Node<ItemType> *inputNextNode):data(inputData), nextNode(inputNextNode){};
+	Node(ItemType inputData):data(inputData), nextNode(nullptr){};
 	Node():data(nullptr), nextNode(nullptr){};
 
 	char getData() const {
@@ -65,6 +66,8 @@ private:
 	}
 
 public:
+	SortedLinkedList() : head(nullptr){};
+
 	virtual bool insertSorted(const ItemType& newEntry){
 		if(head == nullptr){
 			head = new Node<ItemType>(newEntry);
@@ -72,14 +75,29 @@ public:
 			return true;
 		}
 
+		if(newEntry < head->getData()){
+			Node<ItemType> * tempNode = new Node<ItemType>(newEntry, head);
+			head = tempNode;
+
+			return true;
+		}
+
 		Node<ItemType> * traversalNode = head;
 
-		while(traversalNode != nullptr && traversalNode->getData() < newEntry){
+		while(traversalNode->getNextNode() != nullptr && traversalNode->getData() < newEntry){
+			std::cout << newEntry << " compare to: " << (int (traversalNode->getData())) << std::endl;
 			traversalNode = traversalNode->getNextNode();
 		}
 
-		Node<ItemType> * tempNode = new Node<ItemType>(newEntry, *traversalNode);
-		getPreviousNode(*traversalNode)->setNextNode(tempNode);
+		std::cout << std::endl;
+
+		if(traversalNode->getNextNode() == nullptr){
+			traversalNode->setNextNode(new Node<ItemType>(newEntry));
+		}
+		else{
+			Node<ItemType> * tempNode = new Node<ItemType>(newEntry, traversalNode->getNextNode());
+			traversalNode->setNextNode(tempNode);
+		}
 
 		return true;
 	}
@@ -117,6 +135,8 @@ public:
 
 		prevNode->setNextNode(curNode->getNextNode());
 		delete curNode;
+
+		return true;
 	};
 
 	/** Removes all entries from this list. */
@@ -139,18 +159,28 @@ public:
 
 int main() {
 	SortedListInterface<int> * myList = new SortedLinkedList<int>();
-	std::string inputString = "";
+//	std::string inputString = "";
 
+	std::random_device rd;
+
+	std::mt19937 engine(1920);
+	std::uniform_int_distribution<int> dist(1,100);
+
+	for(int i = 0; i < 8; i-=-1){
+		myList->insertSorted(dist(rd));
+	}
+
+
+/*
 	std::cout << "Please enter a few numbers, ints please" << std::endl;
 	for(int i = 0; i < 7; i++){
 		std::getline(std::cin, inputString);
 		myList->insertSorted(std::atoi(&inputString[0]));
 	}
-
-	for(int i = 0; i < 7; i++){
+*/
+	for(int i = 0; i < 8; i++){
 		std::cout << myList->getEntry(i) << std::endl;
 	}
 
-	std::cin;
 	return 0;
 }
